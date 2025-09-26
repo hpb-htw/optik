@@ -209,13 +209,13 @@ struct PlanaMirror {
     }
 
 
-    PlanaMirror labelMirror(Label surfaceL="\tLabel{Grenzfläche}", Label normalL="\tLabel{Einfallslot}"){        
-        if(surfaceL.align == NoAlign) {
-            label(surfaceL, mostLeft, N);
+    PlanaMirror labelMirror(Label surfaceL="\tLabel{Grenzfläche}", Label normalL="\tLabel{Einfallslot}"){
+        if( surfaceL.align.default) {
+            label(surfaceL, mostLeft, align = N);
         } else {
             label(surfaceL, mostLeft);
         }
-        if(normalL.align == NoAlign) {
+        if(normalL.align.default) {
             label(normalL, normalFarthest, align=N);
         } else {
             label(normalL, normalFarthest);
