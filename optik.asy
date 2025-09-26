@@ -2,6 +2,7 @@ private import geometry;
 
 real rayArrowSize = 1.5mm;
 real arcArrowSize = 1mm;
+real mirrorThickness = 1mm;
 pen mirrorColor = gray(0.85);
 pen mirrorNormalLine = (dashed*0.5);
 pen virtualRay = dashed;
@@ -94,9 +95,9 @@ struct PlanaMirror {
      *
      * @return this mirror
      */
-    PlanaMirror setupMirrorSize(real leftWidth, real rightWidth=leftWidth, real normalLength=leftWidth, real mirrorThickness=1mm){
+    PlanaMirror setupMirrorSize(real leftWidth, real rightWidth=leftWidth, real normalLength=leftWidth, real thickness=mirrorThickness){
         // properties for drawing:
-        this.offsetP = -mirrorThickness * unit(this.normalDirection);
+        this.offsetP = -thickness * unit(this.normalDirection);
         this.mostLeft = curpoint(this.surfaceLine, leftWidth);
         this.leftOffset = this.mostLeft + this.offsetP;
 
