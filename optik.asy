@@ -113,16 +113,16 @@ struct PlanaMirror {
     /**
      * draw the mirror accorded to its side
      */
-    PlanaMirror drawMirror(bool withNormal=true) {
+    PlanaMirror drawMirror(bool withNormal=true, pen p=defaultpen) {
         segment mSurface = segment(mostLeft, mostRight);
-        fill( mostLeft -- leftOffset -- rightOffset -- mostRight -- cycle, defaultpen + mirrorColor );
+        fill( mostLeft -- leftOffset -- rightOffset -- mostRight -- cycle, p + mirrorColor );
         draw( mSurface );
         if(withNormal) {
             segment mNormal = segment(this.center + offsetP, this.center);//
-            draw( mNormal, defaultpen  );
+            draw( mNormal, p);
 
             segment trueNormal = segment(this.center, this.normalFarthest);
-            draw( trueNormal, defaultpen + mirrorNormalLine );
+            draw( trueNormal, p + mirrorNormalLine );
         }
         return this;
     }
