@@ -62,6 +62,19 @@ struct PlanaMirror {
         }
     }
 
+    /**
+     * calculate the entry point of a ray from the given by a source and by a propagation direction.
+     * @param source source of the ray
+     * @param direction propagation-direction of the ray
+     * @return Normal Line at the entry point of this ray
+     */
+    NormalLine calculateNormal(point source, vector direction) {
+        line incidentRay = line(source, source + direction);
+        point entryPoint = intersectionpoint(incidentRay, this.surfaceLine);
+        line tmpNormal = line(entryPoint, entryPoint + this.normalDirection);
+        return NormalLine(entryPoint, tmpNormal);
+    }
+
     point reflectedPoint(point source, NormalLine nl){
         line tmpNorm = nl.normalLine;
         transform tt = reflect(tmpNorm);
@@ -130,9 +143,9 @@ struct PlanaMirror {
     /**
      * @param nl must be calculate before
      */
-    PlanaMirror drawNormal(NormalLine nl, real length=this.normalLength) {
+    PlanaMirror drawNormal(NormalLine nl, real length=this.normalLength, pen p = defaultpen) {
         segment trueNormal = segment(nl.entry, nl.entry + length*unit(this.normalDirection));
-        draw( trueNormal, defaultpen + mirrorNormalLine );
+        draw( trueNormal, p + mirrorNormalLine );
         return this;
     }
 
@@ -140,9 +153,9 @@ struct PlanaMirror {
      * @param incidentPosition is used to calculate the normal line and the contact point on the surface of mirror
      * @param length the length of the normal segment
      */
-    PlanaMirror drawNormal(real incidentPosition, real length=this.normalLength) {
+    PlanaMirror drawNormal(real incidentPosition, real length=this.normalLength, pen p = defaultpen) {
         NormalLine nl = this.calculateNormal(incidentPosition);
-        return this.drawNormal(nl, length);
+        return this.drawNormal(nl, length, p);
     }
 
 
@@ -151,11 +164,12 @@ struct PlanaMirror {
      * @param nl must be calculated before
      * @param arrowPosition
      */
-    PlanaMirror drawIncidentRay(point source, NormalLine nl, real arrowPosition=0){
+    PlanaMirror drawIncidentRay(point source, NormalLine nl, real arrowPosition=0, pen p = defaultpen){
         line entryRay = line(source, false, nl.entry, false);
         draw(
             entryRay,
-            arrow=Arrow(rayArrowSize, position=arrowPosition)
+            arrow=Arrow(rayArrowSize, position=arrowPosition),
+            p = p
         );
         return this;
     }
@@ -168,9 +182,9 @@ struct PlanaMirror {
      * incident ray. The arrow is placed by value 0 at the source, by value 1 at the entry point
      * @return this mirror
      */
-    PlanaMirror drawIncidentRay(point source, real incidentPosition = 0.0, real arrowPosition=0){
+    PlanaMirror drawIncidentRay(point source, real incidentPosition = 0.0, real arrowPosition=0, pen p = defaultpen){
         NormalLine nl = this.calculateNormal(incidentPosition);
-        return this.drawIncidentRay(source, nl, arrowPosition);
+        return this.drawIncidentRay(source, nl, arrowPosition, p);
     }
 
 
@@ -178,7 +192,7 @@ struct PlanaMirror {
      * @param source source of ray
      * @param nl must be calculated before
      */
-    PlanaMirror drawReflectedRay(point source, NormalLine nl, real arrowPosition=1, real rayLength=0){
+    PlanaMirror drawReflectedRay(point source, NormalLine nl, real arrowPosition=1, real rayLength=0, pen p = defaultpen){
         point target = this.reflectedPoint(source, nl);
         line ray = line(nl.entry, false, target, true);
         if(rayLength > 0) {
@@ -187,7 +201,8 @@ struct PlanaMirror {
         }
         draw(
             ray,
-            arrow=Arrow(rayArrowSize, position=arrowPosition)
+            arrow=Arrow(rayArrowSize, position=arrowPosition),
+            p = p
         );
         return this;
     }
@@ -198,28 +213,28 @@ struct PlanaMirror {
      * @param arrowPosition
      * @param rayLength
      */
-    PlanaMirror drawReflectedRay(point source, real incidentPosition = 0.0, real arrowPosition=1, real rayLength=0) {
+    PlanaMirror drawReflectedRay(point source, real incidentPosition = 0.0, real arrowPosition=1, real rayLength=0, pen p = defaultpen) {
         NormalLine nl = this.calculateNormal(incidentPosition);
-        return this.drawReflectedRay(source, nl, arrowPosition, rayLength);
+        return this.drawReflectedRay(source, nl, arrowPosition, rayLength, p);
     }
 
-    PlanaMirror drawImageSegment(NormalLine nl, point imagePoint){
+    PlanaMirror drawImageSegment(NormalLine nl, point imagePoint, pen p = defaultpen){
         segment s = segment(nl.entry, imagePoint);
-        draw( s, defaultpen + virtualRay);
+        draw( s, p + virtualRay);
         return this;
     }
 
 
     PlanaMirror labelMirror(Label surfaceL="\tLabel{Grenzfläche}", Label normalL="\tLabel{Einfallslot}"){
         if( surfaceL.align.default) {
-            label(surfaceL, mostLeft, align = N);
+            label(surfaceL, this.mostLeft, align = N);
         } else {
-            label(surfaceL, mostLeft);
+            label(surfaceL, this.mostLeft);
         }
         if(normalL.align.default) {
-            label(normalL, normalFarthest, align=N);
+            label(normalL, this.normalFarthest, align=N);
         } else {
-            label(normalL, normalFarthest);
+            label(normalL, this.normalFarthest);
         }
         return this;
     }
