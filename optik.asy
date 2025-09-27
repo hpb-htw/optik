@@ -15,7 +15,7 @@ struct NormalLine {
         this.entry = entry;
         this. normalLine = normalLine;
     }
-}
+};
 
 struct PlanaMirror {
 
@@ -23,7 +23,7 @@ struct PlanaMirror {
     point center;
     line normalLine;
     line surfaceLine;
-    transform t;
+    private transform t;
     // properties for drawing:
     vector offsetP ;
     point mostLeft ;
@@ -63,7 +63,7 @@ struct PlanaMirror {
     }
 
     /**
-     * calculate the entry point of a ray from the given by a source and by a propagation direction.
+     * calculate the entry point of a ray defined by source of light (point) and by a propagation direction (vector).
      * @param source source of the ray
      * @param direction propagation-direction of the ray
      * @return Normal Line at the entry point of this ray
