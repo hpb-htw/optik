@@ -18,14 +18,27 @@ struct NormalLine {
 };
 
 struct PlanaMirror {
-
+    // conceptual properties
+    /**
+     * is oriented from mirror surface to outside.
+     */
     vector normalDirection;
+    /**
+     * center point of the mirror
+     */
     point center;
+    /**
+     * line defined by center point and normal direction.
+     */
     line normalLine;
+    /**
+     * reflecting line of the mirror ("front side")
+     */
     line surfaceLine;
-    private transform t;
+
     // properties for drawing:
-    vector offsetP ;
+    // private:
+    private vector offsetP ;
     point mostLeft ;
     point leftOffset;
     point mostRight;
@@ -43,12 +56,15 @@ struct PlanaMirror {
         this.normalDirection = normalDirection;
         this.center = center;
         this.normalLine = line(this.center, false, this.center+normalDirection);
-        this.surfaceLine = perpendicular(this.center, this.normalDirection);
-        this.t = reflect( normalLine );
+        this.surfaceLine = perpendicular(this.center, this.normalDirection);        
     }
 
 
     /**
+     * calculates the normal line by a given distance from center point of the mirror.
+     * the vector in the instance of NormalLine is oriented in the direction from the
+     * mirror surface to outside.
+     *
      * @param incidentPosition the position of the incident point on the mirror surface.
      * That is the distance from this point to the mirror center.
      */
@@ -75,6 +91,14 @@ struct PlanaMirror {
         return NormalLine(entryPoint, tmpNormal);
     }
 
+    /**
+     * calculates the reflected point of a given source and the given normal line.
+     * That is the point, which is symetrical to the source point with noral line as Ayis of Symetry.
+     *
+     * @param source source of line
+     * @param nl normal line to the mirror surface
+     *
+     */
     point reflectedPoint(point source, NormalLine nl){
         line tmpNorm = nl.normalLine;
         transform tt = reflect(tmpNorm);
@@ -134,7 +158,7 @@ struct PlanaMirror {
             segment mNormal = segment(this.center + offsetP, this.center);//
             draw( mNormal, p);
 
-            segment trueNormal = segment(this.center, this.normalFarthest);
+            segment trueNormal = segment(this.center, this.center + this.normalFarthest);
             draw( trueNormal, p + mirrorNormalLine );
         }
         return this;
@@ -225,7 +249,7 @@ struct PlanaMirror {
     }
 
 
-    PlanaMirror labelMirror(Label surfaceL="\tLabel{Grenzfläche}", Label normalL="\tLabel{Einfallslot}"){
+    PlanaMirror labelMirror(Label surfaceL="\tLabel{Grenzfläche}", Label normalL="\tLabel{Normal}"){
         if( surfaceL.align.default) {
             label(surfaceL, this.mostLeft, align = N);
         } else {
