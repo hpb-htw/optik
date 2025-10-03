@@ -17,6 +17,10 @@ struct NormalLine {
     }
 };
 
+/**
+ * Ein ebene Spiegel ist charakteristik durch einen Punkt und einen Vertor als Normalvektor des Spiels.
+ * Die Richtung des Normalsvektor zeigt die reflektierende Seite des Spiegels (von der Spiegelsebene weg).
+ */
 struct PlanaMirror {
     // conceptual properties
     /**
@@ -271,4 +275,103 @@ struct PlanaMirror {
         }
         return this;
     }
-}
+
+};
+
+struct ConcaveMirror {
+
+    // geometrische Merkmale
+    /**
+    * Vertex of the mirror (dt. Scheitelpunkt)
+    */
+    point mirrorVertex;
+
+    /**
+    * optical axis, normalized to 1 Unit length.
+    */
+    vector opticalAxis;
+
+    /**
+    * center of curvature
+    */
+    point center;
+
+    /**
+    * focus of mirror
+    */
+    real focus;
+
+    /**
+     * radius of mirror
+     */
+    real radius;
+
+
+    // gestalterrische Merkmale
+    real upAngle;
+    real downAngle;
+    real thickness;
+
+
+    /**
+    * @param mvertex the vertex of the mirror
+    * @param oaxis the optical axis of the mirror, is oriented from the reflective surface away.
+    * @param focus the focus length of the mirror, must be positive
+    */
+    void operator init(point mirrorVertex, vector opticalAxis, real focus) {
+        this.mirrorVertex = mirrorVertex;
+        this.opticalAxis = unit(opticalAxis);
+        this.focus = focus;
+        this.radius = 2*focus;
+        this.center = (this.radius * this.opticalAxis) + mirrorVertex;
+    }
+
+    /**
+    * @param mvertex the vertex of the mirror
+    * @param focus the focus point of the mirror
+    */
+    void operator init(point mirrorVertex, point mirrorFocus) {
+        this.mirrorVertex = mirrorVertex;
+        vector fullAxis = mirrorFocus-mirrorVertex;
+        this.opticalAxis = unit(fullAxis);
+        this.focus = length(fullAxis);
+        this.radius = 2*focus;
+    }
+
+    /**
+     * per default symetrical over optical axis
+     */
+    ConcaveMirror setupMirrorSize(real upAngle, real downAngle=upAngle, real thickness = mirrorThickness) {
+        this.upAngle = upAngle;
+        this.downAngle = downAngle;
+        this.thickness = thickness;
+
+        return this;
+    }
+
+    ConcaveMirror drawMirror(pen p=defaultpen) {
+
+        return this;
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
