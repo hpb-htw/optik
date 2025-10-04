@@ -306,12 +306,21 @@ struct ConcaveMirror {
      */
     real radius;
 
+    coordsys internCs;
 
     // gestalterrische Merkmale
     real upAngle;
     real downAngle;
     real thickness;
 
+    /**
+     * ``
+     */
+    static using coordsysMakerFn = coordsys(point center, vector opticalAxis, real radius);
+    static coordsysMakerFn mkInternalCs = new coordsys(point center, vector opticalAxis, real radius) {
+        vector i = -radius * opticalAxis;
+        return cartesiansystem(center, i, vector((-i.v.y, i.v.x)) );
+    };
 
     /**
     * @param mvertex the vertex of the mirror
@@ -323,7 +332,9 @@ struct ConcaveMirror {
         this.opticalAxis = unit(opticalAxis);
         this.focus = focus;
         this.radius = 2*focus;
-        this.center = (this.radius * this.opticalAxis) + mirrorVertex;
+        point tCenter = (this.radius * this.opticalAxis) + mirrorVertex;
+        this.internCs = mkInternalCs(tCenter, this.opticalAxis, this.radius);
+        this.center = point(this.internCs, tCenter/this.internCs);
     }
 
     /**
@@ -336,6 +347,9 @@ struct ConcaveMirror {
         this.opticalAxis = unit(fullAxis);
         this.focus = length(fullAxis);
         this.radius = 2*focus;
+        point tCenter = (this.radius * this.opticalAxis) + mirrorVertex;
+        this.internCs = mkInternalCs(tCenter, this.opticalAxis, this.radius);
+        this.center = point(this.internCs, tCenter/this.internCs);
     }
 
     /**
@@ -349,8 +363,10 @@ struct ConcaveMirror {
         return this;
     }
 
-    ConcaveMirror drawMirror(pen p=defaultpen) {
-
+    ConcaveMirror drawMirror(pen p=defaultpen) {        
+        dot("M",this.center);
+        show(this.internCs);
+        dot("V",this.mirrorVertex);
         return this;
     }
 };
