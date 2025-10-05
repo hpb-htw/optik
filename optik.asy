@@ -5,15 +5,20 @@ real arcArrowSize = 1mm;
 real mirrorThickness = 1mm;
 pen mirrorColor = gray(0.85);
 pen mirrorNormalLine = (dashed*0.5);
+pen mirrorOpticalAxisLine = dashdotted;
 pen virtualRay = dashed;
 
-struct NormalLine {
-    point entry;
-    line normalLine;
+/**
+ * repräsentiert ein Paar von einer Gerade `line normalLine` einem Punkt `entry point` auf der Gerade.
+ *
+ */
+struct PointLine {
+    point p;
+    line l;
 
     void operator init(point entry, line normalLine){
-        this.entry = entry;
-        this. normalLine = normalLine;
+        this.p = entry;
+        this.l = normalLine;
     }
 };
 
@@ -66,19 +71,19 @@ struct PlanaMirror {
 
     /**
      * calculates the normal line by a given distance from center point of the mirror.
-     * the vector in the instance of NormalLine is oriented in the direction from the
+     * the vector in the instance of PointLine is oriented in the direction from the
      * mirror surface to outside.
      *
      * @param incidentPosition the position of the incident point on the mirror surface.
      * That is the distance from this point to the mirror center.
      */
-    NormalLine calculateNormal(real incidentPosition) {
+    PointLine calculateNormal(real incidentPosition) {
         if(incidentPosition != 0) {
             point tmpEntry = curpoint(this.surfaceLine, incidentPosition);
             line tmpNorm = line(tmpEntry, tmpEntry + this.normalDirection);
-            return NormalLine(tmpEntry, tmpNorm);
+            return PointLine(tmpEntry, tmpNorm);
         } else {
-            return NormalLine(this.center, this.normalLine);
+            return PointLine(this.center, this.normalLine);
         }
     }
 
@@ -88,11 +93,11 @@ struct PlanaMirror {
      * @param direction propagation-direction of the ray
      * @return Normal Line at the entry point of this ray
      */
-    NormalLine calculateNormal(point source, vector direction) {
+    PointLine calculateNormal(point source, vector direction) {
         line incidentRay = line(source, source + direction);
         point entryPoint = intersectionpoint(incidentRay, this.surfaceLine);
         line tmpNormal = line(entryPoint, entryPoint + this.normalDirection);
-        return NormalLine(entryPoint, tmpNormal);
+        return PointLine(entryPoint, tmpNormal);
     }
 
     /**
@@ -103,8 +108,8 @@ struct PlanaMirror {
      * @param nl normal line to the mirror surface
      *
      */
-    point reflectedPoint(point source, NormalLine nl){
-        line tmpNorm = nl.normalLine;
+    point reflectedPoint(point source, PointLine nl){
+        line tmpNorm = nl.l;
         transform tt = reflect(tmpNorm);
         return tt * source;
     }
@@ -114,7 +119,7 @@ struct PlanaMirror {
      * point of this mirror
      */
     point reflectedPoint(point source, real incidentPosition=0) {
-        NormalLine nl = calculateNormal(incidentPosition);
+        PointLine nl = calculateNormal(incidentPosition);
         return this.reflectedPoint(source, nl);
     }
 
@@ -171,8 +176,8 @@ struct PlanaMirror {
     /**
      * @param nl must be calculate before
      */
-    PlanaMirror drawNormal(NormalLine nl, real length=this.normalLength, pen p = defaultpen) {
-        segment trueNormal = segment(nl.entry, nl.entry + length*unit(this.normalDirection));
+    PlanaMirror drawNormal(PointLine nl, real length=this.normalLength, pen p = defaultpen) {
+        segment trueNormal = segment(nl.p, nl.p + length*unit(this.normalDirection));
         draw( trueNormal, p + mirrorNormalLine );
         return this;
     }
@@ -182,7 +187,7 @@ struct PlanaMirror {
      * @param length the length of the normal segment
      */
     PlanaMirror drawNormal(real incidentPosition, real length=this.normalLength, pen p = defaultpen) {
-        NormalLine nl = this.calculateNormal(incidentPosition);
+        PointLine nl = this.calculateNormal(incidentPosition);
         return this.drawNormal(nl, length, p);
     }
 
@@ -192,8 +197,8 @@ struct PlanaMirror {
      * @param nl must be calculated before
      * @param arrowPosition
      */
-    PlanaMirror drawIncidentRay(point source, NormalLine nl, real arrowPosition=0, pen p = defaultpen){
-        line entryRay = line(source, false, nl.entry, false);
+    PlanaMirror drawIncidentRay(point source, PointLine normalLine, real arrowPosition=0, pen p = defaultpen){
+        line entryRay = line(source, false, normalLine.p, false);
         draw(
             entryRay,
             arrow=Arrow(rayArrowSize, position=arrowPosition),
@@ -211,7 +216,7 @@ struct PlanaMirror {
      * @return this mirror
      */
     PlanaMirror drawIncidentRay(point source, real incidentPosition = 0.0, real arrowPosition=0, pen p = defaultpen){
-        NormalLine nl = this.calculateNormal(incidentPosition);
+        PointLine nl = this.calculateNormal(incidentPosition);
         return this.drawIncidentRay(source, nl, arrowPosition, p);
     }
 
@@ -220,12 +225,12 @@ struct PlanaMirror {
      * @param source source of ray
      * @param nl must be calculated before
      */
-    PlanaMirror drawReflectedRay(point source, NormalLine nl, real arrowPosition=1, real rayLength=0, pen p = defaultpen){
-        point target = this.reflectedPoint(source, nl);
-        line ray = line(nl.entry, false, target, true);
+    PlanaMirror drawReflectedRay(point source, PointLine normalLine, real arrowPosition=1, real rayLength=0, pen p = defaultpen){
+        point target = this.reflectedPoint(source, normalLine);
+        line ray = line(normalLine.p, false, target, true);
         if(rayLength > 0) {
             point target = curpoint(ray, rayLength);
-            ray = line(nl.entry, false, target, false);
+            ray = line(normalLine.p, false, target, false);
         }
         draw(
             ray,
@@ -242,12 +247,12 @@ struct PlanaMirror {
      * @param rayLength
      */
     PlanaMirror drawReflectedRay(point source, real incidentPosition = 0.0, real arrowPosition=1, real rayLength=0, pen p = defaultpen) {
-        NormalLine nl = this.calculateNormal(incidentPosition);
+        PointLine nl = this.calculateNormal(incidentPosition);
         return this.drawReflectedRay(source, nl, arrowPosition, rayLength, p);
     }
 
-    PlanaMirror drawImageSegment(NormalLine nl, point imagePoint, pen p = defaultpen){
-        segment s = segment(nl.entry, imagePoint);
+    PlanaMirror drawImageSegment(PointLine normalLine, point imagePoint, pen p = defaultpen){
+        segment s = segment(normalLine.p, imagePoint);
         draw( s, p + virtualRay);
         return this;
     }
@@ -278,6 +283,18 @@ struct PlanaMirror {
 
 };
 
+/**
+ * extends the segment AB in the direction B by a given factor
+ * @param startPoint start point
+ * @param endPoint end point
+ * @param factor extended factor in direction end point
+ */
+segment extendSegment(point startPoint, point endPoint, real factor) {
+    line l = line(startPoint, endPoint);
+    point e = relpoint(l, factor);
+    return segment(startPoint, e);
+}
+
 struct ConcaveMirror {
 
     // geometrische Merkmale
@@ -306,12 +323,21 @@ struct ConcaveMirror {
      */
     real radius;
 
+    point focusPoint;
+
     coordsys internCs;
 
     // gestalterrische Merkmale
     real upAngle;
     real downAngle;
     real thickness;
+    //
+    circle mirror;
+    path mirrorArc;
+    //
+    real byParallel = 1.5;
+    real byFocus = 1.5;
+    real byCenter = 1.5;
 
     /**
      * ``
@@ -334,7 +360,8 @@ struct ConcaveMirror {
         this.radius = 2*focus;
         point tCenter = (this.radius * this.opticalAxis) + mirrorVertex;
         this.internCs = mkInternalCs(tCenter, this.opticalAxis, this.radius);
-        this.center = point(this.internCs, tCenter/this.internCs);
+        this.center = point(this.internCs, tCenter/this.internCs);        
+        this.focusPoint = point(this.internCs, (0.5,0));
     }
 
     /**
@@ -350,6 +377,7 @@ struct ConcaveMirror {
         point tCenter = (this.radius * this.opticalAxis) + mirrorVertex;
         this.internCs = mkInternalCs(tCenter, this.opticalAxis, this.radius);
         this.center = point(this.internCs, tCenter/this.internCs);
+        this.focusPoint = point(this.internCs, (0.5,0));
     }
 
     /**
@@ -359,26 +387,160 @@ struct ConcaveMirror {
         this.upAngle = upAngle;
         this.downAngle = downAngle;
         this.thickness = thickness;
+        // compute mirror geometry
+        this.mirror = circle(this.center, this.radius);
+        this.mirrorArc = arcfromfocus(mirror, 180-this.downAngle, 180+this.upAngle);
+        // there is a bug in geometry.asy, which does not allow to use arccircle and arc with
+        // a coordinate system other than defaultcoordsys
+        return this;
+    }
+
+    ConcaveMirror drawMirror(pen p=defaultpen) {
+        draw(mirrorArc, p = p);
+        line oAxis = Ox(this.center.coordsys);
+        draw(oAxis, p = p + mirrorOpticalAxisLine);
+        // show("",this.internCs);
+        return this;
+    }
+
+    /**
+     * @param byParallel extending factor of the reflexted ray from a pararellel ray
+     * @param byFocus extending factor of the reflexted ray from a ray through focus
+     * @param byCenter extending factor of the reflexted ray from a ray through center of curvature (of the mirror)
+     */
+    ConcaveMirror setupRaysExtend(real byParallel=1.8, real byFocus=byParallel, real byCenter=byFocus) {
+        this.byParallel = byParallel;
+        this.byFocus = byFocus;
+        this.byCenter = byCenter;
 
         return this;
     }
 
-    ConcaveMirror drawMirror(pen p=defaultpen) {        
-        dot("M",this.center);
-        show(this.internCs);
-        dot("V",this.mirrorVertex);
+    /**
+     * calculates a pair of Point and Line.
+     * The line is the incident ray from source and paralle to the optical axis of the mirror.
+     * The point is the entry point of the incident ray on the mirror.
+     */
+    PointLine calculateIntersectionPointFromParalleRay(point nSource){
+        line paralleIncident = line(nSource, point(this.internCs, (0, nSource.y)) );
+        // draw(this.mirror, p = defaultpen + mirrorColor);
+        point[] paralleEntry = intersectionpoints(paralleIncident, this.mirror);
+        for(point e : paralleEntry ){
+            //dot("", e);
+            //write(e.x, e.y);
+            if(e.x >= 0) {
+                return PointLine(e, paralleIncident);
+            }
+        }
+        write("ERROR: cannot find intersection point of the parallel ray with the mirror.");
+        return PointLine(paralleEntry[0], paralleIncident);
+    }
+
+    /**
+     * calculates a pair of Point and Line.
+     * The line is the reflected ray of the ray through nSource and the focus point of the mirror.
+     * The point is the entry point of the incident ray on the mirror.
+     */
+    PointLine calculateIntersectionPointFromFocusRay(point nSource){
+        line focusRay = line(nSource, this.focusPoint);
+        point[] entry = intersectionpoints(focusRay, this.mirror);
+        for(point e : entry){
+            // dot("", e);
+            // write(e.x, e.y);
+            if(e.x >= 0){
+                line reflected = line(e, false, point(this.internCs, (0, e.y)), true );
+                return PointLine(e, reflected);
+            }
+        }
+        write("ERROR: cannot find intersection point of the focus ray with the mirror.");
+        return PointLine(entry[0], focusRay);
+    }
+
+    point calculateIntersectionPointFromCenterRay(point nSource, point imgPoint){
+        line centerRay = line(nSource, imgPoint);
+        //draw(centerRay);
+        point[] entry = intersectionpoints(centerRay, this.mirror);
+        for(point e : entry){
+            // dot("", e);
+            // write(e.x, e.y);
+            if(e.x >= 0){
+                //write("calculated point: ", e.x, e.y);
+                //line check = line(e, nSource);
+                //draw(check);
+                return e;
+            }
+        }
+        write("ERROR: cannot find intersection point of the center ray with the mirror.");
+        return point(this.internCs, (0, 0) );
+    }
+
+    private void drawRealImageInside(point nSource, pen p) {
+        // determine the reflex ray from the parallel ray;
+        PointLine paralle = calculateIntersectionPointFromParalleRay(nSource);
+        point entryPoint = paralle.p;
+        line paralenRay = line(nSource, false, entryPoint, false);
+        draw(paralenRay, p = p);
+        // determine the reflex ray from the parallel ray;
+        PointLine focusRay = calculateIntersectionPointFromFocusRay(nSource);
+        line sourceFocusRay = line(nSource, false, focusRay.p, false);
+        draw(sourceFocusRay, p = p);
+        // find out the image point
+        point imgPoint = intersectionpoint( line(paralle.p, this.focusPoint), focusRay.l);
+        dot(imgPoint);
+        // draw the reflexted rays as segments
+        segment reflexFocus = extendSegment(paralle.p, imgPoint, this.byParallel);
+        draw(reflexFocus, p = p, arrow = Arrow(rayArrowSize));
+        segment reflexParallel = extendSegment(focusRay.p, imgPoint, this.byFocus);
+        draw(reflexParallel, p = p, arrow=Arrow(rayArrowSize));
+        // FAKE ray through the center cause of approximate by sphrecial mirror
+        point reflectedByCenter = calculateIntersectionPointFromCenterRay(nSource, imgPoint);
+        segment incidentRayThroughCenter = segment(nSource, reflectedByCenter);
+        draw(incidentRayThroughCenter, p = p);
+        segment reflextedRayThrowCenter = extendSegment(reflectedByCenter, imgPoint, this.byCenter);
+        draw(reflextedRayThrowCenter, p = p, arrow = Arrow(rayArrowSize));
+    }
+
+    private void drawRealImageOutside(point nSource, pen p) {
+        write("drawRealImageOutside");
+    }
+
+    private void drawVirtualImage(point nSource, pen p){
+        write("drawVirtualImage");
+    }
+
+    private void drawImageAtCenter(point nSource, pen p) {
+        write("drawImageAtCenter");
+    }
+
+    ConcaveMirror drawImage(point source, pen p=defaultpen) {
+        point nSource = changecoordsys(this.internCs, source); //point(this.internCs, source/this.internCs);
+        real x = nSource.x;
+        if (x < 0) {
+            drawRealImageInside(nSource, p);
+        }else if (x > 0 && x < 0.5) {
+            drawRealImageOutside(nSource, p);
+        }else if(x > 0.5 && x < 1) {
+            drawVirtualImage(nSource, p);
+        }else if(x == 0) {
+            drawImageAtCenter(nSource, p);
+        }else if (x >= 1) {
+            write("WARN: source of light behind mirror");
+        }
+        return this;
+    }
+
+    ConcaveMirror labelMirrorPoint(Label centerL="$C$", Label focusL="$F$", Label vertexL="$V$"){
+        label(centerL, this.center);
+        label(focusL, this.center -- this.mirrorVertex);
+        label(vertexL, this.mirrorVertex);
+        return this;
+    }
+
+    ConcaveMirror labelMirrorSize() {
+        write("TODO");
         return this;
     }
 };
-
-
-
-
-
-
-
-
-
 
 
 
