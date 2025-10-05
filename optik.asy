@@ -105,11 +105,11 @@ struct PlanaMirror {
      * That is the point, which is symetrical to the source point with noral line as Ayis of Symetry.
      *
      * @param source source of line
-     * @param nl normal line to the mirror surface
+     * @param normalLine normal line to the mirror surface
      *
      */
-    point reflectedPoint(point source, PointLine nl){
-        line tmpNorm = nl.l;
+    point reflectedPoint(point source, PointLine normalLine){
+        line tmpNorm = normalLine.l;
         transform tt = reflect(tmpNorm);
         return tt * source;
     }
@@ -194,7 +194,7 @@ struct PlanaMirror {
 
     /**
      * @param source source of ray
-     * @param nl must be calculated before
+     * @param normalLine must be calculated before
      * @param arrowPosition
      */
     PlanaMirror drawIncidentRay(point source, PointLine normalLine, real arrowPosition=0, pen p = defaultpen){
@@ -223,7 +223,7 @@ struct PlanaMirror {
 
     /**
      * @param source source of ray
-     * @param nl must be calculated before
+     * @param normalLine must be calculated before
      */
     PlanaMirror drawReflectedRay(point source, PointLine normalLine, real arrowPosition=1, real rayLength=0, pen p = defaultpen){
         point target = this.reflectedPoint(source, normalLine);
@@ -340,7 +340,7 @@ struct ConcaveMirror {
     real byCenter = 1.5;
 
     /**
-     * ``
+     *
      */
     static using coordsysMakerFn = coordsys(point center, vector opticalAxis, real radius);
     static coordsysMakerFn mkInternalCs = new coordsys(point center, vector opticalAxis, real radius) {
@@ -349,8 +349,8 @@ struct ConcaveMirror {
     };
 
     /**
-    * @param mvertex the vertex of the mirror
-    * @param oaxis the optical axis of the mirror, is oriented from the reflective surface away.
+    * @param mirrorVertex the vertex of the mirror
+    * @param opticalAxis the optical axis of the mirror, is oriented from the reflective surface away.
     * @param focus the focus length of the mirror, must be positive
     */
     void operator init(point mirrorVertex, vector opticalAxis, real focus) {
@@ -365,8 +365,8 @@ struct ConcaveMirror {
     }
 
     /**
-    * @param mvertex the vertex of the mirror
-    * @param focus the focus point of the mirror
+    * @param mirrorVertex the vertex of the mirror
+    * @param mirrorFocus the focus point of the mirror
     */
     void operator init(point mirrorVertex, point mirrorFocus) {
         this.mirrorVertex = mirrorVertex;
